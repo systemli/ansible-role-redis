@@ -4,13 +4,13 @@
 VAGRANTFILE_API_VERSION = "2"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  ENV['ANSIBLE_ROLES_PATH'] =  "#{File.dirname(__FILE__)}/../"
+
   # VirtualBox.
   config.vm.provider :virtualbox do |v|
     v.memory = 512
     v.cpus = 1
   end
-
-  ENV['ANSIBLE_ROLES_PATH'] =  "#{File.dirname(__FILE__)}/../"
 
   # Ubuntu Trusty (14.04 LTS)
   config.vm.define "trusty" do |trusty|
