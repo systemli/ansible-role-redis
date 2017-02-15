@@ -1,3 +1,9 @@
+- name: ensure vm.overcommit_memory is enabled
+  sysctl:
+    name: vm.overcommit_memory
+    value: 1
+    state: present
+
 - name: ensure dotdeb repository key is present
   apt_key:
     data: "{{ lookup('file', 'dotdeb.gpg') }}"
