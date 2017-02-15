@@ -1,0 +1,55 @@
+- name: ensure dotdeb repository key is present
+  apt_key:
+    data: "{{ lookup('file', 'dotdeb.gpg') }}"
+  when: "{{ redis_dotdeb_enabled }} and ansible_distribution == 'Debian'"
+
+- name: ensure dotdeb repository is present
+  apt_repository:
+    repo: "deb http://packages.dotdeb.org {{ ansible_distribution_release }} all"
+  when: "{{ redis_dotdeb_enabled }} and ansible_distribution == 'Debian'"
+
+- name: ensure version pinning is latest
+  template:
+    src: apt-pinning.j2
+    dest: /etc/apt/preferences.d/redis-server
+  when: "{{ redis_version }}"
+
+- name: ensure redis-server is installed
+  apt:
+    pkg: redis-server
+    state: "{{ redis_apt_state }}"
+
+- name: include distribution and version specific defaults
+  include_vars: "{{ item }}"
+  with_first_found:
+    - skip: yes
+      files:
+        - "{{ ansible_distribution_release }}.yml"
+        - "{{ ansible_distribution|lower }}.yml"
+
+- name: ensure config (3.2) is latest
+  template:
+    src: redis-3.2.conf.j2
+    dest: /etc/redis/redis.conf
+  notify: restart redis-server
+  when: "ansible_distribution == 'Debian'"
+
+- name: ensure config (3.0) is latest
+  template:
+    src: redis-3.0.conf.j2
+    dest: /etc/redis/redis.conf
+  notify: restart redis-server
+  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_release == 'xenial'"
+
+- name: ensure config (2.8) is latest
+  template:
+    src: redis-2.8.conf.j2
+    dest: /etc/redis/redis.conf
+  notify: restart redis-server
+  when: "ansible_distribution == 'Ubuntu' and ansible_distribution_release == 'trusty'"
+
+- name: ensure service is enabled
+  service:
+    name: redis-server
+    state: started
+    enabled: yes
